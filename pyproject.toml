@@ -1,0 +1,15 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "mojo-verde"
+version = "0.1.0"
+description = "A Mojo port of the compute-bound parts of the verde geospatial library"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+dependencies = ["numpy", "scipy", "scikit-learn", "pandas", "xarray"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["python/mojoverde"]

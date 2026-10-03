@@ -1,8 +1,9 @@
 .pixi/
 dist/
-build/*.o
+build/
 __pycache__/
 *.so
 *.pyc
 .pytest_cache/
 .venv/
+.ipynb_checkpoints/
