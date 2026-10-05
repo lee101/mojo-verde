@@ -29,6 +29,8 @@ _REDUCTIONS = {
 def _nchunks(n):
     return max(1, min(n, 4 * WORKERS))
 
+_NO_WEIGHTS = np.empty(0, dtype="float64")
+
 
 def _binned_mean(labels, values, weights, nblocks, ncomps, weighted):
     """Per-block count, sum(w) and weighted mean."""
@@ -78,8 +80,10 @@ def _grouped(values, labels, block_ids, nblocks, name, weights=None):
     gathers with one argsort, the same ordering pandas' groupby builds.
     """
     if name == "mean" and weights is None:
+        # The kernel does not read the weights when they are unused, so an
+        # empty buffer is passed rather than an n-long array of ones.
         mean, _, _ = _binned_mean(
-            labels, f64(values).ravel(), np.ones(labels.size), nblocks, 1, 0
+            labels, f64(values).ravel(), _NO_WEIGHTS, nblocks, 1, 0
         )
         return mean[block_ids]
     order = np.argsort(labels, kind="stable")
@@ -87,12 +91,14 @@ def _grouped(values, labels, block_ids, nblocks, name, weights=None):
     starts = np.searchsorted(sorted_labels, block_ids, side="left")
     stops = np.searchsorted(sorted_labels, block_ids, side="right")
     grouped = f64(values).ravel()[order]
+    # One permutation of the weights for the whole pass, not one per block.
+    grouped_weights = None if weights is None else f64(weights).ravel()[order]
     func = getattr(np, name)
     out = np.empty(block_ids.size, dtype="float64")
     for b in range(block_ids.size):
         chunk = grouped[starts[b] : stops[b]]
-        if weights is not None:
-            out[b] = func(chunk, weights=weights[order][starts[b] : stops[b]])
+        if grouped_weights is not None:
+            out[b] = func(chunk, weights=grouped_weights[starts[b] : stops[b]])
         else:
             out[b] = func(chunk)
     return out

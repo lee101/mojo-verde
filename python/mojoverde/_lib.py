@@ -56,9 +56,25 @@ _SIGNATURES = {
     "mv_checkerboard": ([_F64] * 3 + [I] + [F] * 3 + [I], None),
 }
 
-# Point counts above which the kernels hand their outer loop to the thread
-# pool. The Python side always passes an explicit worker count.
-WORKERS = max(1, (os.cpu_count() or 1))
+# Worker count handed to every kernel that has a parallel branch. One
+# worker silently serialises all of them, which is why this is never 1.
+# The cap is measured, not guessed: 72 workers buy under 5% over 32 on
+# the kNN scan and lose on the O(n.m) prediction. Override with
+# MOJOVERDE_WORKERS. Note that this caps the work items, not the threads:
+# the first parallel call opens MAX's own pool, which is sized from the
+# machine and is roughly 80 threads whatever this number says, so the
+# 512-pid cgroup budget of a shared CI box is the real limit.
+MAX_WORKERS = 32
+
+
+def _worker_count() -> int:
+    env = os.environ.get("MOJOVERDE_WORKERS")
+    if env:
+        return max(1, int(env))
+    return max(1, min(MAX_WORKERS, len(os.sched_getaffinity(0))))
+
+
+WORKERS = _worker_count()
 
 
 class BuildError(RuntimeError):

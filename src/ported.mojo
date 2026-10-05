@@ -175,8 +175,6 @@ def standard_scale_fit(
         while i < nrows:
             total += jacobian.unsafe_load(i * ncols + c)
             i += 1
-        if nrows < 1:
-            return
         var m = total / Float64(nrows)
         mean.unsafe_store(c, m)
         var acc = 0.0

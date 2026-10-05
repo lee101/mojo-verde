@@ -46,7 +46,7 @@ import mojoverde as mv
 region = (0, 10, -5, 5)
 coordinates = mv.scatter_points(region, 2000, random_state=0)
 easting, northing = coordinates
-data = np.sin(easting / 3) * np.cos(north / 4) * 10
+data = np.sin(easting / 3) * np.cos(northing / 4) * 10
 
 # Decimate to 0.1-degree blocks, then grid with a biharmonic spline.
 chain = mv.Chain(

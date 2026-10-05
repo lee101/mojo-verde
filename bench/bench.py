@@ -194,7 +194,7 @@ def _():
     return lambda: ours.predict(coords), lambda: theirs.predict(coords)
 
 
-@case("grid_coordinates (4M points, spacing 0.01)")
+@case("grid_coordinates (1.00M points, spacing 0.01)")
 def _():
     region = (0, 10, -5, 5)
     return (
